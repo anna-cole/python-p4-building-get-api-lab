@@ -11,7 +11,8 @@ db = SQLAlchemy(metadata=metadata)
 class Bakery(db.Model, SerializerMixin):
     __tablename__ = 'bakeries'
 
-    serialize_rules = ('-baked_goods.bakery',)
+    serialize_only = ('id', 'name', 'created_at', 'updated_at',)
+    serialize_rules = ()
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
