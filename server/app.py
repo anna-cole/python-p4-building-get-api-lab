@@ -49,6 +49,9 @@ def bakeries():
         
     return make_response(bakeries_list, 200)
 
+    # bakeries = [bakery.to_dict() for bakery in Bakery.query.all()]
+    # return make_response(bakeries, 200)
+
 @app.route('/bakeries/<int:id>')
 def bakery_by_id(id):
     bakery = Bakery.query.filter(Bakery.id == id).first()
@@ -80,6 +83,10 @@ def bakery_by_id(id):
 
     return make_response(body, status)
 
+    # bakery = Bakery.query.filter_by(id=id).first()
+    # bakery_serialized = bakery.to_dict()
+    # return make_response (bakery_serialized, 200)
+
 @app.route('/baked_goods/by_price')
 def baked_goods_by_price():
     body = []  # array to store a dictionary for each baked good
@@ -103,6 +110,10 @@ def baked_goods_by_price():
        
     return make_response(body, 200)
 
+    # baked_goods_by_price = BakedGood.query.order_by(BakedGood.price.desc()).all() # better way, no need to import desc
+    # baked_goods_by_price_serialized = [bg.to_dict() for bg in baked_goods_by_price]
+    # return make_response(baked_goods_by_price_serialized, 200)
+
 @app.route('/baked_goods/most_expensive')
 def most_expensive_baked_good():
     good_obj = BakedGood.query.order_by(desc('price')).first()
@@ -110,6 +121,9 @@ def most_expensive_baked_good():
     body = good_obj.to_dict() # here the to_dict method is straight on the obj, so the serialization rules in the model apply.       
     return make_response(body, 200)
 
+    # most_expensive = BakedGood.query.order_by(BakedGood.price.desc()).limit(1).first()
+    # most_expensive_serialized = most_expensive.to_dict()
+    # return make_response(most_expensive_serialized, 200)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
