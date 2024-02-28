@@ -2,9 +2,8 @@
 
 from flask import Flask, make_response, jsonify
 from flask_migrate import Migrate
-from sqlalchemy import desc
-
 from models import db, Bakery, BakedGood
+from sqlalchemy import desc
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -21,12 +20,13 @@ def index():
 
 @app.route('/bakeries')
 def bakeries():
-    bakeries_list = []
+    bakeries_list = [] # will be a list of dictionaries
     bakeries = Bakery.query.all()
+    
     for bakery in bakeries:
-
-        goods_list = []
-        goods = bakery.baked_goods
+        goods_list = [] # will be a list of dictionaries of goods from each bakery
+        goods = bakery.baked_goods # list of objects
+        
         for good in goods:
             good_dict = {
                 'id': good.id,
@@ -52,21 +52,22 @@ def bakeries():
 @app.route('/bakeries/<int:id>')
 def bakery_by_id(id):
     bakery = Bakery.query.filter(Bakery.id == id).first()
-    goods_list = []
-    goods = bakery.baked_goods
-
-    for good in goods:
-        good_dict = {
-            'id': good.id,
-            'name': good.name,
-            'price': good.price,
-            'created_at': good.created_at,
-            'updated_at': good.updated_at,
-            'bakery_id': good.bakery_id
-        }
-        goods_list.append(good_dict)
     
     if bakery:
+        goods_list = [] # will be a list of dictionaries
+        goods = bakery.baked_goods # list of objects
+        
+        for good in goods:
+            good_dict = {
+                'id': good.id,
+                'name': good.name,
+                'price': good.price,
+                'created_at': good.created_at,
+                'updated_at': good.updated_at,
+                'bakery_id': good.bakery_id
+            }
+            goods_list.append(good_dict)
+    
         body = {'id': bakery.id,
                 'name': bakery.name,
                 'created_at': bakery.created_at,
@@ -79,12 +80,16 @@ def bakery_by_id(id):
 
     return make_response(body, status)
 
-# Better way to debug this for inspecting variables? Breakpoint or flask shell?
 @app.route('/baked_goods/by_price')
 def baked_goods_by_price():
     body = []  # array to store a dictionary for each baked good
-    for good in BakedGood.query.order_by(desc('price')):
-        bakery_dict = good.bakery.to_dict()
+
+    for good in BakedGood.query.order_by(desc('price')).all(): # list of objects
+        if good.bakery is not None:
+            bakery_dict = good.bakery.to_dict(only=('id', 'name', 'created_at', 'updated_at',)) # to_dict is on a relationship, not on the obj, that's why the serialiation rules are not applying. Use serialization rules in the to_dict method. 
+        else: 
+            bakery_dict = {}
+        
         good_dict = {
             'bakery': bakery_dict,
             'id': good.id,
@@ -95,11 +100,16 @@ def baked_goods_by_price():
             'bakery_id': good.bakery_id
         }
         body.append(good_dict)
+       
     return make_response(body, 200)
 
 @app.route('/baked_goods/most_expensive')
 def most_expensive_baked_good():
-    return ''
+    good_obj = BakedGood.query.order_by(desc('price')).first()
+    # breakpoint()
+    body = good_obj.to_dict() # here the to_dict method is straight on the obj, so the serialization rules in the model apply.       
+    return make_response(body, 200)
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
